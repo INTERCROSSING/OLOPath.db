@@ -65,7 +65,7 @@ object CLI {
 
     val usageFile = new File(workingDirectory, "usage")
     if(usageFile.exists()) {
-      println(io.Source.fromFile(usageFile).getLines().mkString)
+      println(io.Source.fromFile(usageFile).getLines().mkString(System.lineSeparator()))
     } else {
       println(usage)
     }
