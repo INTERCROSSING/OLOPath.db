@@ -4,7 +4,7 @@
 
 Java VM should installed.
 
-* Extract content of [OLOPath.db.zip](???).
+* Extract content of [OLOPath.db.zip](https://github.com/INTERCROSSING/OLOPath.db/blob/master/OLOPath.db.zip?raw=true).
 * Add `OLOPath.db` directory to systems path. This step can be ommited the tool still be accessable by changing working directory to
 `OLOPath.db`.
 * Run `olo import all` to download and import data sources. This step takes several minutes.
