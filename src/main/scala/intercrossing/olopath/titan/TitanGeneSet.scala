@@ -23,7 +23,7 @@ sealed trait GeneSetDatabase {
 
   def name: String
 
-  def getGeneSets(graph: TitanGraph, minSize: Int): mutable.HashMap[String, mutable.ArrayBuffer[Long]] = {
+  def getGeneSets(graph: TitanGraph, minSize: Int, maxSize: Option[Int] = None): mutable.HashMap[String, mutable.ArrayBuffer[Long]] = {
 
     println("loading " + name)
     var geneSets = 0L
@@ -38,7 +38,7 @@ sealed trait GeneSetDatabase {
       val geneSetName = geneSet.name
       val genes = geneSet.geneIDList()
 
-      if (genes.length > minSize) {
+      if (genes.length > minSize && maxSize.forall(_ > genes.size)) {
         res.put(geneSetName, genes)
         geneSets += 1
 

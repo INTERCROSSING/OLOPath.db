@@ -64,7 +64,7 @@ object GeneSetClustering {
     println("compared unique: " + unique + " common: " + notUnique)
   }
 
-  def cluster(geneSets: mutable.HashMap[String, mutable.ArrayBuffer[Long]], d0: Double): mutable.HashMap[String, mutable.ArrayBuffer[Long]] = {
+  def cluster(geneSets: mutable.HashMap[String, mutable.ArrayBuffer[Long]], d0: Double, maxSize: Option[Int] = None): mutable.HashMap[String, mutable.ArrayBuffer[Long]] = {
     val result = new mutable.HashMap[String, mutable.ArrayBuffer[Long]]
     println("clustering " + geneSets.size + " gene sets")
 
@@ -81,7 +81,12 @@ object GeneSetClustering {
         }
         case Some((name2, set2)) => {
           result.remove(name2)
-          result.put(name2 + "_" + name, SetUtils.union(set2, set))
+          val union = SetUtils.union(set2, set)
+          val chunk = maxSize match {
+            case None => union
+            case Some(m) => union.take(m)
+          }
+          result.put(name2 + "_" + name, chunk)
         }
       }
     }
