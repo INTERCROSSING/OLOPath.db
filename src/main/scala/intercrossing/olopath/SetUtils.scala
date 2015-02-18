@@ -2,7 +2,6 @@ package intercrossing.olopath
 
 import scala.annotation.tailrec
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 
 object SetUtils {
 
@@ -14,7 +13,7 @@ object SetUtils {
       } else if (i2 >= seq2.length) {
         acc + math.max(0, seq1.length - i1)
       } else {
-        if(seq1(i1) == seq2(i2)) {
+        if (seq1(i1) == seq2(i2)) {
           xorrec(i1 + 1, i2 + 1, acc)
         } else if (seq1(i1) > seq2(i2)) {
           xorrec(i1, i2 + 1, acc + 1)
@@ -34,9 +33,9 @@ object SetUtils {
     var res = true
     var wrongPair = (0L, 1L)
     for (i <- 0 to (list.size - 2)) {
-      if(list(i) > list(i+1)) {
-        wrongPair = (list(i), list(i+1))
-        res =  false
+      if (list(i) > list(i + 1)) {
+        wrongPair = (list(i), list(i + 1))
+        res = false
       }
     }
     (res, wrongPair)
@@ -51,7 +50,7 @@ object SetUtils {
       } else if (i2 >= seq2.length) {
         res ++= seq1.drop(i1)
       } else {
-        if(seq1(i1) == seq2(i2)) {
+        if (seq1(i1) == seq2(i2)) {
           res += seq1(i1)
           unionrec(i1 + 1, i2 + 1, res)
         } else if (seq1(i1) > seq2(i2)) {

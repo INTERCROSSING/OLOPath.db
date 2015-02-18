@@ -1,30 +1,9 @@
 package intercrossing.olopath.titan
 
 import com.thinkaurelius.titan.core.{TitanVertex, Order, TitanGraph}
-import com.tinkerpop.blueprints.{Direction, Vertex}
-import intercrossing.olopath.SetUtils
+import com.tinkerpop.blueprints.{Direction}
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-
-//object GeneSetDatabase {
-//
-//  val geneSetDatabaseLabel = "GENE_SET_DB_LABEL"
-//  val geneSetDatabaseName = "GENE_SET_DB_NAME"
-//
-//  def get(graph: TitanGraph, name: String): Option[GeneSetDatabase] = {
-//    val it = graph.query()
-//      .has("label", geneSetDatabaseLabel)
-//      .has(geneSetDatabaseName, name)
-//      .limit(1)
-//      .vertices().iterator()
-//    if(it.hasNext) {
-//      Some(GeneSetDatabase(it.next()))
-//    } else {
-//      None
-//    }
-//  }
-//}
-
 
 object GeneSetDatabase {
 
@@ -33,21 +12,16 @@ object GeneSetDatabase {
   val geneSetDBTOGeneSetEDGE = "DB_TO_GENE_SET_LABEL"
   val geneSetDBTOGeneSetNAME = "DB_TO_GENE_SET_NAME"
 
-
-
   def apply(s: String) = s match {
     case "GeneSetDB" => GeneSetDB
     case "BioSystems" => BioSystems
   }
-}
-sealed trait GeneSetDatabase {
-  def name: String
 
-//  def getVertex(graph: TitanGraph) = {
-//    graph.query()
-//      .has("label", GeneSetDatabase.geneSetDBLabel)
-//      .has(GeneSetDatabase.geneSetDBTOGeneSetNAME, name)
-//  }
+}
+
+sealed trait GeneSetDatabase {
+
+  def name: String
 
   def getGeneSets(graph: TitanGraph, minSize: Int): mutable.HashMap[String, mutable.ArrayBuffer[Long]] = {
 
@@ -60,30 +34,21 @@ sealed trait GeneSetDatabase {
       .has(TitanGeneSet.geneSetDatabase, name)
       .vertices().iterator().foreach { geneSetVertex =>
 
-      //      if(counter % 100 == 0) {
-      //        println(counter + " gene sets processed")
-      //      }
-      //      counter += 1
-
       val geneSet = new TitanGeneSet(graph, geneSetVertex.asInstanceOf[TitanVertex])
       val geneSetName = geneSet.name
       val genes = geneSet.geneIDList()
 
-      if(genes.length > minSize) {
+      if (genes.length > minSize) {
         res.put(geneSetName, genes)
         geneSets += 1
 
-        if(geneSets % 500 == 0) {
+        if (geneSets % 500 == 0) {
           println(geneSets + " loaded...")
         }
       } else {
         filtered += 1
       }
-
-
     }
-
-
 
     println("loaded: " + geneSets + " filtered: " + filtered)
     res
@@ -107,7 +72,7 @@ object TitanGeneSet {
   val geneSetName = "GENE_SET_NAME"
   val geneSetTaxId = "GENE_SET_TAX"
 
-  val geneSetToGeneEdgeGeneId =  "GENE_SET_EDGE_GENE_ID"
+  val geneSetToGeneEdgeGeneId = "GENE_SET_EDGE_GENE_ID"
   val geneSetToGeneEdgeLabel = "GENE_SET_EDGE_LABEL"
 
 
@@ -118,19 +83,12 @@ object TitanGeneSet {
       .has(geneSetDatabase, database.name)
       .vertices().iterator()
 
-    if(it.hasNext) {
+    if (it.hasNext) {
       Some(new TitanGeneSet(graph, it.next().asInstanceOf[TitanVertex]))
     } else {
       None
     }
   }
-
-//  def getGeneSet(graph: TitanGraph, name: String, database: GeneSetDatabase, databaseVertex: Vertex): Option[TitanGeneSet] = {
-//    databaseVertex.query()
-//      .has("label", GeneSetDatabase.geneSetDBTOGeneSetEDGE)
-//      .has(GeneSetDatabase.geneSetDBTOGeneSetNAME, name).labels()
-//
-//  }
 
   def createGeneSet(graph: TitanGraph, name: String, database: GeneSetDatabase, source: String): TitanGeneSet = {
     val vertex = graph.addVertexWithLabel(geneSetLabel)
@@ -164,7 +122,9 @@ object TitanGeneSet {
 }
 
 class TitanGeneSet(graph: TitanGraph, val vertex: TitanVertex) {
+
   import TitanGeneSet._
+
   def database: GeneSetDatabase = {
     GeneSetDatabase(vertex.getProperty(geneSetDatabase))
   }
@@ -173,27 +133,11 @@ class TitanGeneSet(graph: TitanGraph, val vertex: TitanVertex) {
 
   def source = vertex.getProperty(geneSetSource)
 
-  //todo make it idempotent!!!
-
   def getGenes(): List[TitanGene] = {
     vertex.getVertices(Direction.OUT, geneSetToGeneEdgeLabel).iterator().toList.map { vertex =>
       new TitanGene(graph, vertex)
     }
   }
-
-//  def geneSet(): mutable.HashSet[Long] = {
-//    val res = new mutable.HashSet[Long]()
-//
-//    vertex.query()
-//      .labels(geneSetToGeneEdgeLabel)
-//      .direction(Direction.OUT)
-//      .vertices().iterator().foreach { vertex =>
-//      res += vertex.getProperty(TitanGene.geneIDProperty)
-//    }
-//
-//    res
-//  }
-
 
   def geneSet(): mutable.HashSet[Long] = {
     val res = new mutable.HashSet[Long]()
@@ -207,7 +151,7 @@ class TitanGeneSet(graph: TitanGraph, val vertex: TitanVertex) {
   }
 
   def geneIDList(): mutable.ArrayBuffer[Long] = {
-    val res = new mutable.ArrayBuffer[Long]() //todo store size in vertex???
+    val res = new mutable.ArrayBuffer[Long]()
     vertex
       .query()
       .labels(geneSetToGeneEdgeLabel)
@@ -221,7 +165,7 @@ class TitanGeneSet(graph: TitanGraph, val vertex: TitanVertex) {
 
 
   def addGene(geneID: Long): Int = {
-    var res  = 0
+    var res = 0
     val it = vertex.query()
       .labels(TitanGeneSet.geneSetToGeneEdgeLabel)
       .direction(Direction.OUT)
@@ -229,19 +173,17 @@ class TitanGeneSet(graph: TitanGraph, val vertex: TitanVertex) {
 
     if (!it.hasNext) {
       TitanGene.byGeneID(graph, geneID).foreach { gene =>
-          val edge = vertex.addEdge(geneSetToGeneEdgeLabel, gene.vertex)
-          edge.setProperty(geneSetToGeneEdgeGeneId, geneID)
-          res += 1
+        val edge = vertex.addEdge(geneSetToGeneEdgeLabel, gene.vertex)
+        edge.setProperty(geneSetToGeneEdgeGeneId, geneID)
+        res += 1
       }
-      if(res == 0) {
-       // println(geneID + " not found")
+      if (res == 0) {
+        // println(geneID + " not found")
       }
     } else {
-     // println(geneID + "already added")
+      // println(geneID + "already added")
     }
-
     res
-
   }
 
   def addGenes(geneIDs: Traversable[Long]): Unit = {

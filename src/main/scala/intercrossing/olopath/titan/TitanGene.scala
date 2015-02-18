@@ -8,8 +8,6 @@ import scala.collection.JavaConversions._
 
 object TitanGene {
   val geneLabel = "GENE"
-//  val startPositionProperty = "START"
-//  val endPositionProperty = "END"
   val uniprotID = "GENE_UNIPROT"
   val geneSymbolProperty = "GENE_SYMBOL"
   val geneIDProperty = "GENEID"
@@ -22,7 +20,7 @@ object TitanGene {
       .has(geneIDProperty, geneID)
       .vertices().iterator()
 
-    if(it.hasNext) {
+    if (it.hasNext) {
       Some(new TitanGene(graph, it.next()))
     } else {
       None
@@ -31,7 +29,6 @@ object TitanGene {
   }
 }
 
-//or locus???
 class TitanGene(graph: TitanGraph, val vertex: Vertex) extends Gene {
 
   override def symbol: String = {
@@ -51,22 +48,7 @@ class TitanGene(graph: TitanGraph, val vertex: Vertex) extends Gene {
     vertex.getProperty(TitanGene.uniprotID)
   }
 
-//  override def names: Set[String] = {
-//    val names: java.util.ArrayList[String] = vertex.getProperty(TitanGene.geneNameProperty)
-//    names.toSet
-//  }
-//
-//  override def end: Long = {
-//    vertex.getProperty(TitanGene.endPositionProperty)
-//  }
-//
-//  override def start: Long = {
-//    vertex.getProperty(TitanGene.startPositionProperty)
-//
-//  }
-
   override def toString: String = {
-    //"Gene(" + start + "," + end + "," + names + ")"
     "Gene(" + symbol + ", GeneID:" + geneIDs + ", " + uniprotId + ", " + mim + ")"
   }
 }

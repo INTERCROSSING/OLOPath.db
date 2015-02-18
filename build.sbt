@@ -4,7 +4,7 @@ Nice.scalaProject
 import AssemblyKeys._
 
 
-name := "olo"
+name := "olopath"
 
 description := "OLOPath.db"
 
@@ -12,14 +12,17 @@ organization := "intercrossing"
 
 bucketSuffix := "era7.com"
 
-//mainClass in oneJar := Some("ohnosequences.gde.CLI")
+//mainClass in oneJar := Some("ohnosequences.olopath.CLI")
 
 fatArtifactSettings
 
 libraryDependencies ++= Seq(
   "commons-io"     % "commons-io" % "2.1",
   "com.novocode" % "junit-interface" % "0.11" % "test"
+//  "com.github.scopt" %% "scopt" % "3.3.0"
 )
+
+libraryDependencies += "org.rogach" %% "scallop" % "0.9.5"
 
 libraryDependencies += "com.thinkaurelius.titan" % "titan-core" % "0.5.3"
 

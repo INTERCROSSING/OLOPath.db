@@ -1,42 +1,31 @@
 package intercrossing.olopath.titan
 
-import java.net.URL
 import java.io.File
 import com.thinkaurelius.titan.core._
 import com.tinkerpop.blueprints.{Direction, Vertex}
 
 
-//trait Titan
-
 object Database {
-
-
 
   def create(delete: Boolean, workingDirectory: File): Database = {
     val dbLocation = new File(workingDirectory, "database")
 
-    if(delete) {
+    if (delete) {
       org.apache.commons.io.FileUtils.deleteDirectory(dbLocation)
     }
 
     val g = TitanFactory.build()
       .set("storage.backend", "berkeleyje")
       .set("storage.directory", dbLocation.getAbsolutePath)
-    // .set("storage.backend","cassandra")
-    // .set("storage.hostname","127.0.0.1")
+      // .set("storage.backend","cassandra")
+      // .set("storage.hostname","127.0.0.1")
       .set("attributes.allow-all", false)
       .set("query.force-index", true)
       .open()
 
-
-//    metrics.enabled = true
-//    # Required; specify logging interval in milliseconds
-//    metrics.console.interval = 60000
-
-
-
     val mgmt = g.getManagementSystem()
-    if(delete) {
+
+    if (delete) {
       val importedLabel = mgmt.makeVertexLabel("imported").make()
       val moduleName = mgmt.makePropertyKey("module").dataType(classOf[String]).cardinality(Cardinality.SINGLE).make()
       mgmt.buildIndex("importedByModuleName", classOf[Vertex]).addKey(moduleName).indexOnly(importedLabel).buildCompositeIndex()
@@ -92,12 +81,9 @@ object Database {
       val geneSymbolPropery = mgmt.makePropertyKey(TitanGene.geneSymbolProperty).dataType(classOf[String]).cardinality(Cardinality.SINGLE).make()
       mgmt.buildIndex("geneBy" + TitanGene.geneSymbolProperty, classOf[Vertex]).addKey(geneSymbolPropery).indexOnly(geneLabel).buildCompositeIndex()
 
-      // mgmt.makePropertyKey(TitanGene.geneSymbolProperty).dataType(classOf[String]).cardinality(Cardinality.SINGLE).make()
-
       mgmt.commit()
     }
     new Database(g)
-
   }
 }
 
@@ -110,12 +96,11 @@ class Database(val graph: TitanGraph) {
     } catch {
       case e: IllegalStateException => println("warning: " + e.toString)
     }
-    println("databased shut down")
+    println("databased shutdown")
   }
 
   def importUniprot(file: File): Unit = {
-    if(!isUniprotImported) {
-      //import
+    if (!isUniprotImported) {
       Import.importUniprot(file, graph)
       val uniprotVertex = graph.addVertexWithLabel("imported")
       uniprotVertex.setProperty("module", "uniprot")
@@ -128,7 +113,7 @@ class Database(val graph: TitanGraph) {
   def importHG19(file: File): Unit = {
     if (!isUniprotImported) {
       println("error: UniprotKB should be imported first")
-    } else if(!isHG19Imported) {
+    } else if (!isHG19Imported) {
       val hg19 = TitanReference.getOrCreateReference(graph, "hg19")
       Import.ncbiPositionsImport(file, "GRCh37\\.p13", graph, hg19)
       val uniprotVertex = graph.addVertexWithLabel("imported")
@@ -142,8 +127,7 @@ class Database(val graph: TitanGraph) {
   def importHG38(file: File): Unit = {
     if (!isUniprotImported) {
       println("error: UniprotKB should be imported first")
-    } else if(!isHG38Imported) {
-      //import
+    } else if (!isHG38Imported) {
       val hg38 = TitanReference.getOrCreateReference(graph, "hg38")
       Import.ncbiPositionsImport(file, "GRCh38", graph, hg38)
       val uniprotVertex = graph.addVertexWithLabel("imported")
@@ -180,9 +164,9 @@ class Database(val graph: TitanGraph) {
   }
 
   def importGeneSetDB(file: File) = {
-    if(!isUniprotImported) {
+    if (!isUniprotImported) {
       println("error: UniprotKB should be imported first")
-    } else if(isGeneSetDBImported) {
+    } else if (isGeneSetDBImported) {
       println("warning: GeneSetDB has already been imported")
     } else {
       Import.importGenSetDB(file, graph)
@@ -193,9 +177,9 @@ class Database(val graph: TitanGraph) {
   }
 
   def importBioSystems(taxonomyFile: File, geneFile: File) = {
-    if(!isUniprotImported) {
+    if (!isUniprotImported) {
       println("error: UniprotKB should be imported first")
-    } else if(isBioSystemsImported) {
+    } else if (isBioSystemsImported) {
       println("warning: BioSystems has already been imported")
     } else {
       BioSystemsImport.importBioSystemsTaxonomy(graph, taxonomyFile)
@@ -222,28 +206,6 @@ class Database(val graph: TitanGraph) {
     val geneSetDB = new File(workingDirectory, "download-gmt_h.txt")
     Download.downloadGeneSetDB(geneSetDB)
     importGeneSetDB(geneSetDB)
-
-
-
-
   }
 
-//  def importOpen(): Unit = {
-//    val uniprotFile = new File("uniprot_sprot_human.dat.gz")
-//    Download.downloadUniprot(uniprotFile)
-//    importUniprot(uniprotFile)
-//
-//    val ncbi105File = new File("seq_gene_105.md.gz")
-//    Download.downloadHG19(ncbi105File)
-//    importHG19(ncbi105File)
-//
-//    val ncbi106File = new File("seq_gene_106.md.gz")
-//    Download.downloadHG38(ncbi106File)
-//    importHG38(ncbi106File)
-//
-//    val geneSetDB = new File("download-gmt_h.txt")
-//    Download.downloadGeneSetDB(geneSetDB)
-//    importGeneSetDB(geneSetDB)
-//
-//  }
 }

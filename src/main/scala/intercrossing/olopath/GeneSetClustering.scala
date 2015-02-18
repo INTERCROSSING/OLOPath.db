@@ -10,7 +10,7 @@ import scala.collection.mutable
 object GeneSetClustering {
 
   def findClosest(d0: Double, geneSet: mutable.ArrayBuffer[Long], sets2: mutable.HashMap[String, mutable.ArrayBuffer[Long]])
-    : Option[(String, mutable.ArrayBuffer[Long])] = {
+  : Option[(String, mutable.ArrayBuffer[Long])] = {
     sets2.find { case (name, set2) =>
       SetUtils.distance(geneSet, set2) <= d0
     }
@@ -29,10 +29,9 @@ object GeneSetClustering {
   }
 
 
-
   def compare(geneSets1: mutable.HashMap[String, mutable.ArrayBuffer[Long]],
-                                   geneSets2: mutable.HashMap[String, mutable.ArrayBuffer[Long]], d0: Double,
-                                    uniqueFile: File, commonFile: File): Unit = {
+              geneSets2: mutable.HashMap[String, mutable.ArrayBuffer[Long]], d0: Double,
+              uniqueFile: File, commonFile: File): Unit = {
 
     println("comparing " + geneSets1.size + " gene sets vs " + geneSets2.size + " gene sets")
     var unique = 0L
@@ -41,12 +40,11 @@ object GeneSetClustering {
     val commonOut = new PrintWriter(commonFile)
     geneSets1.foreach { case (name1, set1) =>
 
-      if((unique + notUnique) % 100 == 0 ) {
+      if ((unique + notUnique) % 100 == 0) {
         println("comparing unique: " + unique + " common: " + notUnique)
       }
       findClosest(d0, set1, geneSets2) match {
         case None => {
-          //println(name1 + " is unique")
           set1.foreach { geneID =>
             uniqueOut.println(name1 + "\t" + geneID + "\t" + 100)
           }
@@ -66,14 +64,14 @@ object GeneSetClustering {
     println("compared unique: " + unique + " common: " + notUnique)
   }
 
-  def cluster(geneSets: mutable.HashMap[String, mutable.ArrayBuffer[Long]], d0: Double):  mutable.HashMap[String, mutable.ArrayBuffer[Long]] = {
+  def cluster(geneSets: mutable.HashMap[String, mutable.ArrayBuffer[Long]], d0: Double): mutable.HashMap[String, mutable.ArrayBuffer[Long]] = {
     val result = new mutable.HashMap[String, mutable.ArrayBuffer[Long]]
     println("clustering " + geneSets.size + " gene sets")
 
     var processed = 0
     geneSets.foreach { case (name, set) =>
       processed += 1
-      if(processed % 100 == 0) {
+      if (processed % 100 == 0) {
         println("clustering " + processed + " processed")
       }
       findClosest(d0, set, result) match {
@@ -91,7 +89,6 @@ object GeneSetClustering {
     println("clustered to " + result.size + " gene sets")
     result
   }
-
 
 
 }

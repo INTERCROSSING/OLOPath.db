@@ -35,13 +35,10 @@ class GeneTests {
       val gene = TitanGene.byGeneID(graph, id)
       assertEquals(true, gene.exists(_.geneIDs.contains(id)))
 
-
       val id2: Long = 333932
       val gene2 = TitanGene.byGeneID(graph, id2)
       assertEquals(true, gene2.exists(_.geneIDs.contains(id2)))
-
     }
-
   }
 
   @Test
@@ -105,23 +102,9 @@ class GeneTests {
 
       val ch10 = ch10o.get
 
-
-      //112950219 .. 113167678
       assertEquals(Some("TCF7L2"), ch10.findNearestStart(112950319).map(_.symbol))
       assertEquals(Some("125853"), ch10.findNearestStart(112950319).map(_.mim))
     }
-  }
-
-  @Test
-  def rawVertexTest(): Unit = {
-    import TitanGene._
-    import ohnosequences.olopath.titan.TitanChromosome._
-    //val hg38 = TitanReference(graph, "hg38").get
-    //hg38.vertex.query().has(TitanChromosome.)
-
-    //chrom
-
-
   }
 
 }

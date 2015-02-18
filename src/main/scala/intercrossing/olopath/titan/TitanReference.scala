@@ -28,6 +28,7 @@ object TitanReference {
     vertex.map(new TitanReference(titan, id, _))
   }
 }
+
 class TitanReference(graph: TitanGraph, id: String, val vertex: Vertex) extends Reference {
 
   def getChromosome(name: String): Option[TitanChromosome] = {
@@ -37,7 +38,7 @@ class TitanReference(graph: TitanGraph, id: String, val vertex: Vertex) extends 
       .has(TitanChromosome.nameEdgeProperty, name)
       .vertices().iterator()
 
-    if(iterator.hasNext) {
+    if (iterator.hasNext) {
       Some(new TitanChromosome(graph, iterator.next()))
     } else {
       None
@@ -51,7 +52,7 @@ class TitanReference(graph: TitanGraph, id: String, val vertex: Vertex) extends 
       .has(TitanChromosome.nameEdgeProperty, name)
       .vertices().iterator()
 
-    if(iterator.hasNext) {
+    if (iterator.hasNext) {
       new TitanChromosome(graph, iterator.next())
     } else {
       createChromosome(name)
