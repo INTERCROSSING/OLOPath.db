@@ -15,6 +15,7 @@ object GeneSetDatabase {
   def apply(s: String) = s match {
     case "GeneSetDB" => GeneSetDB
     case "BioSystems" => BioSystems
+    case "IntPath" => IntPath
   }
 
 }
@@ -57,8 +58,10 @@ sealed trait GeneSetDatabase {
 
 case object GeneSetDB extends GeneSetDatabase {
   def name = "GeneSetDB"
+}
 
-
+case object IntPath extends GeneSetDatabase {
+  def name = "IntPath"
 }
 
 case object BioSystems extends GeneSetDatabase {

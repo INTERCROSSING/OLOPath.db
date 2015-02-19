@@ -80,8 +80,25 @@ class GeneTests {
         case Some(set) => {
           val genes = set.getGenes()
           assertEquals(14, genes.size)
-          println(genes)
+         // println(genes)
           assertEquals(true, genes.exists(_.geneIDs.contains(9241)))
+        }
+      }
+    }
+  }
+
+  @Test
+  def intPathTest(): Unit = {
+    if(!database.isIntPathImported) {
+      println("error: IntPath must be imported for this test")
+    } else {
+      TitanGeneSet.getGeneSet(graph, "Glycolysis and Gluconeogenesis", IntPath) match {
+        case None => assertEquals(None, Some(""))
+        case Some(set) => {
+          val genes = set.getGenes()
+          assertEquals(74, genes.size) //91?
+        //  println(genes)
+          assertEquals(true, genes.exists(_.geneIDs.contains(5211)))
         }
       }
     }

@@ -143,6 +143,11 @@ class Database(val graph: TitanGraph) {
     it.hasNext
   }
 
+  def isIntPathImported: Boolean = {
+    val it = graph.query().has("label", "imported").has("module", "IntPath").vertices().iterator()
+    it.hasNext
+  }
+
   def isHG19Imported: Boolean = {
     val it = graph.query().has("label", "imported").has("module", "hg19").vertices().iterator()
     it.hasNext
@@ -172,6 +177,19 @@ class Database(val graph: TitanGraph) {
       Import.importGenSetDB(file, graph)
       val importVertex = graph.addVertexWithLabel("imported")
       importVertex.setProperty("module", "GeneSetDB")
+      graph.commit()
+    }
+  }
+
+  def importIntPath(file: File) = {
+    if (!isUniprotImported) {
+      println("error: UniprotKB should be imported first")
+    } else if (isIntPathImported) {
+      println("warning: IntPath has already been imported")
+    } else {
+      Import.importIntPath(file, graph)
+      val importVertex = graph.addVertexWithLabel("imported")
+      importVertex.setProperty("module", "IntPath")
       graph.commit()
     }
   }
@@ -206,6 +224,10 @@ class Database(val graph: TitanGraph) {
     val geneSetDB = new File(workingDirectory, "download-gmt_h.txt")
     Download.downloadGeneSetDB(geneSetDB)
     importGeneSetDB(geneSetDB)
+
+    val intPath = new File("sapiens.zip")
+    Download.downloadIntPath(intPath)
+    Import.importIntPath(intPath, graph)
   }
 
 }

@@ -4,6 +4,7 @@ import java.io.{PrintWriter, File}
 import com.thinkaurelius.titan.core.TitanVertex
 import intercrossing.olopath.titan._
 import scala.collection.JavaConversions._
+import scala.collection.mutable
 
 
 object CLI {
@@ -72,8 +73,13 @@ object CLI {
 
   }
 
+  def parseDatabases(databases: String): List[GeneSetDatabase] = {
+    databases.split(',').map(GeneSetDatabase(_)).toList
+  }
+
 
   def main(args: Array[String]): Unit = {
+    //println(args.toList)
     args.toList match {
       case Nil => println("command not specified")
       case "import" :: "all" :: Nil => {
@@ -86,6 +92,13 @@ object CLI {
         val uniprotFile = new File(getWorkingDirectory, "uniprot_sprot_human.dat.gz")
         val database = Database.create(delete = false, getWorkingDirectory)
         database.importUniprot(uniprotFile)
+        database.shutdown()
+      }
+
+      case "import" :: "IntPath" :: Nil => {
+        val intPath = new File("sapiens.zip")
+        val database = Database.create(delete = false, getWorkingDirectory)
+        database.importIntPath(intPath)
         database.shutdown()
       }
 
@@ -125,107 +138,78 @@ object CLI {
         if (database.isBioSystemsImported) {
           println("BioSystems")
         }
+        if (database.isIntPathImported) {
+          println("IntPath")
+        }
         database.shutdown()
       }
 
-      case "cluster" :: "BioSystems" :: "GeneSetDB" :: "-d0" :: d0 :: "-min" :: minSize :: "-o" :: out :: Nil => {
+      case "cluster" :: databases0 :: "-d0" :: d0 :: "-min" :: minSize :: "-max" :: maxSize :: "-o" :: out :: Nil => {
+
         val database = Database.create(delete = false, getWorkingDirectory)
+        val databases = parseDatabases(databases0)
+        val allGeneSets = new mutable.HashMap[String, mutable.ArrayBuffer[Long]]
+        databases.foreach { geneSetDatabase =>
+          val geneSets = geneSetDatabase.getGeneSets(database.graph, minSize.toInt, Some(maxSize.toInt))
+          geneSets.foreach { case (name, genes) =>
+            allGeneSets.get(name) match {
+              case None => allGeneSets.put(name, genes)
+              case Some(oldGenes) => {
+                println("warning: gene set " + name + " is already loaded merging")
+                allGeneSets.put(name, SetUtils.union(oldGenes, genes))
+              }
+            }
+          }
+        }
 
-        val bioSystems = BioSystems.getGeneSets(database.graph, minSize.toInt)
-        val geneSetDB = GeneSetDB.getGeneSets(database.graph, minSize.toInt)
-        val union = bioSystems ++= geneSetDB
-        val res = GeneSetClustering.cluster(union, d0.toDouble)
-        GeneSetClustering.saveGeneSets(res, new File(out))
-        database.shutdown()
-      }
-
-      case "cluster" :: "BioSystems" :: "GeneSetDB" :: "-d0" :: d0 :: "-min" :: minSize :: "-max" :: maxSize :: "-o" :: out :: Nil => {
-        val database = Database.create(delete = false, getWorkingDirectory)
-
-        val bioSystems = BioSystems.getGeneSets(database.graph, minSize.toInt, Some(maxSize.toInt))
-        val geneSetDB = GeneSetDB.getGeneSets(database.graph, minSize.toInt, Some(maxSize.toInt))
-        val union = bioSystems ++= geneSetDB
-        val res = GeneSetClustering.cluster(union, d0.toDouble, Some(maxSize.toInt))
-        GeneSetClustering.saveGeneSets(res, new File(out))
-        database.shutdown()
-      }
-
-      case "cluster" :: "BioSystems" :: "-d0" :: d0 :: "-min" :: minSize :: "-o" :: out :: Nil => {
-        val database = Database.create(delete = false, getWorkingDirectory)
-
-        val bioSystems = BioSystems.getGeneSets(database.graph, minSize.toInt)
-        val res = GeneSetClustering.cluster(bioSystems, d0.toDouble)
-        GeneSetClustering.saveGeneSets(res, new File(out))
-        database.shutdown()
-      }
-
-      case "cluster" :: "BioSystems" :: "-d0" :: d0 :: "-min" :: minSize :: "-max" :: maxSize :: "-o" :: out :: Nil => {
-        val database = Database.create(delete = false, getWorkingDirectory)
-
-        val bioSystems = BioSystems.getGeneSets(database.graph, minSize.toInt, Some(maxSize.toInt))
-        val res = GeneSetClustering.cluster(bioSystems, d0.toDouble, Some(maxSize.toInt))
-        GeneSetClustering.saveGeneSets(res, new File(out))
-        database.shutdown()
-      }
-
-      case "cluster" :: "GeneSetDB" ::  "-d0" :: d0 :: "-min" :: minSize :: "-o" :: out :: Nil => {
-        val database = Database.create(delete = false, getWorkingDirectory)
-
-        val geneSetDB = GeneSetDB.getGeneSets(database.graph, minSize.toInt)
-        val res = GeneSetClustering.cluster(geneSetDB, d0.toDouble)
-        GeneSetClustering.saveGeneSets(res, new File(out))
-        database.shutdown()
-      }
-
-      case "cluster" :: "GeneSetDB" ::  "-d0" :: d0 :: "-min" :: minSize :: "-max" :: maxSize :: "-o" :: out :: Nil => {
-        val database = Database.create(delete = false, getWorkingDirectory)
-
-        val geneSetDB = GeneSetDB.getGeneSets(database.graph, minSize.toInt, Some(maxSize.toInt))
-        val res = GeneSetClustering.cluster(geneSetDB, d0.toDouble, Some(maxSize.toInt))
+        val res = GeneSetClustering.cluster(allGeneSets, d0.toDouble, Some(maxSize.toInt))
         GeneSetClustering.saveGeneSets(res, new File(out))
         database.shutdown()
       }
 
 
-      case "compare" :: "BioSystems" :: "GeneSetDB" :: "-d0" :: d0 :: "-min" :: minSize :: "-unique" :: unique :: "-common" :: common :: Nil => {
+      case "cluster" :: databases0 :: "-d0" :: d0 :: "-min" :: minSize :: "-o" :: out :: Nil => {
+        val database = Database.create(delete = false, getWorkingDirectory)
+        val databases = parseDatabases(databases0)
+        val allGeneSets = new mutable.HashMap[String, mutable.ArrayBuffer[Long]]
+        databases.foreach { geneSetDatabase =>
+          val geneSets = geneSetDatabase.getGeneSets(database.graph, minSize.toInt, None)
+          geneSets.foreach { case (name, genes) =>
+            allGeneSets.get(name) match {
+              case None => allGeneSets.put(name, genes)
+              case Some(oldGenes) => {
+                println("warning: gene set " + name + " is already loaded merging")
+                allGeneSets.put(name, SetUtils.union(oldGenes, genes))
+              }
+            }
+          }
+        }
+        val res = GeneSetClustering.cluster(allGeneSets, d0.toDouble, None)
+        GeneSetClustering.saveGeneSets(res, new File(out))
+        database.shutdown()
+      }
+
+
+      case "compare" :: database1 :: database2 :: "-d0" :: d0 :: "-min" :: minSize :: "-unique" :: unique :: "-common" :: common :: Nil => {
         val database = Database.create(delete = false, getWorkingDirectory)
         val d0d = d0.toDouble
         val minSizeI = minSize.toInt
-        val bioSystems = BioSystems.getGeneSets(database.graph, minSize.toInt)
-        val geneSetDB = GeneSetDB.getGeneSets(database.graph, minSize.toInt)
-        GeneSetClustering.compare(bioSystems, geneSetDB, d0d, new File(unique), new File(common))
+        val geneSets1 = GeneSetDatabase.apply(database1).getGeneSets(database.graph, minSize.toInt)
+        val geneSets2 = GeneSetDatabase.apply(database2).getGeneSets(database.graph, minSize.toInt)
+        GeneSetClustering.compare(geneSets1, geneSets2, d0d, new File(unique), new File(common))
         database.shutdown()
       }
 
-      case "compare" :: "BioSystems" :: "GeneSetDB" :: "-d0" :: d0 :: "-min" :: minSize :: "-max" :: maxSize :: "-unique" :: unique :: "-common" :: common :: Nil => {
+      case "compare" :: database1 :: database2  :: "-d0" :: d0 :: "-min" :: minSize :: "-max" :: maxSize :: "-unique" :: unique :: "-common" :: common :: Nil => {
         val database = Database.create(delete = false, getWorkingDirectory)
         val d0d = d0.toDouble
         val minSizeI = minSize.toInt
-        val bioSystems = BioSystems.getGeneSets(database.graph, minSize.toInt, Some(maxSize.toInt))
-        val geneSetDB = GeneSetDB.getGeneSets(database.graph, minSize.toInt, Some(maxSize.toInt))
-        GeneSetClustering.compare(bioSystems, geneSetDB, d0d, new File(unique), new File(common))
+        val geneSets1 = GeneSetDatabase.apply(database1).getGeneSets(database.graph, minSize.toInt, Some(maxSize.toInt))
+        val geneSets2 = GeneSetDatabase.apply(database2).getGeneSets(database.graph, minSize.toInt, Some(maxSize.toInt))
+        GeneSetClustering.compare(geneSets1, geneSets2, d0d, new File(unique), new File(common))
         database.shutdown()
       }
 
-      case "compare" :: "GeneSetDB" :: "BioSystems" :: "-d0" :: d0 :: "-min" :: minSize :: "-unique" :: unique :: "-common" :: common :: Nil => {
-        val database = Database.create(delete = false, getWorkingDirectory)
-        val d0d = d0.toDouble
-        val minSizeI = minSize.toInt
-        val bioSystems = BioSystems.getGeneSets(database.graph, minSize.toInt)
-        val geneSetDB = GeneSetDB.getGeneSets(database.graph, minSize.toInt)
-        GeneSetClustering.compare(bioSystems, geneSetDB, d0d, new File(unique), new File(common))
-        database.shutdown()
-      }
-
-      case "compare" :: "GeneSetDB" :: "BioSystems" :: "-d0" :: d0 :: "-min" :: minSize :: "-max" :: maxSize :: "-unique" :: unique :: "-common" :: common :: Nil => {
-        val database = Database.create(delete = false, getWorkingDirectory)
-        val d0d = d0.toDouble
-        val minSizeI = minSize.toInt
-        val bioSystems = BioSystems.getGeneSets(database.graph, minSize.toInt, Some(maxSize.toInt))
-        val geneSetDB = GeneSetDB.getGeneSets(database.graph, minSize.toInt, Some(maxSize.toInt))
-        GeneSetClustering.compare(bioSystems, geneSetDB, d0d, new File(unique), new File(common))
-        database.shutdown()
-      }
 
       case "help" :: Nil => printUsage(getWorkingDirectory)
 

@@ -1,7 +1,7 @@
 package intercrossing.olopath.titan
 
 import java.io.{FileInputStream, File}
-import java.util.zip.GZIPInputStream
+import java.util.zip.{ZipFile, GZIPInputStream}
 
 import scala.collection.JavaConversions._
 
@@ -153,6 +153,53 @@ object Import {
     }
     addGene(graph, uniprotId, geneIDs.toList, geneSymbol, mimId = mim)
     graph.commit()
+  }
+
+  def importIntPath(file: File, graph: TitanGraph) {
+    println("importing IntPath from " + file.getName)
+    val zip = new ZipFile(file)
+    import collection.JavaConverters._
+    val entries = zip.entries().asScala
+    val sapGenes = "sapiensIntPathGenes"
+    entries.find(_.getName.equals(sapGenes)) match {
+      case None => throw new Error("error: couldn't find " + sapGenes + " in " + file.getName)
+      case Some(entry) => {
+        val sourse = io.Source.fromInputStream(zip.getInputStream(entry))
+        var counter = 0L
+        var genesCounter = 0L
+        var genesSetCounter = 0L
+
+        sourse.getLines().foreach { line =>
+          counter += 1
+          val parts = line.split('\t')
+          val name = parts(0).trim
+          val geneSymbol = parts(1).trim
+          val source = parts(2).trim
+
+          if (counter % 1000 == 0) {
+            println(counter + " processed")
+          }
+
+          val geneSet = TitanGeneSet.getOrCreateGeneSet(graph, name, IntPath, source)
+          TitanGene.byGeneSymbol(graph, geneSymbol) match {
+            case None => //println("warning: unknown gene symbol " + geneSymbol)
+            case Some(gene) => {
+              gene.geneIDs.headOption match {
+                case None => //println("warning: gene without GeneID " + gene.symbol)
+                case Some(geneId) => {
+                  genesCounter += 1
+                  geneSet.addGene(geneId)
+                }
+              }
+            }
+          }
+        }
+        println("imported: " + genesCounter + " genes")
+      }
+    }
+
+
+
   }
 
   def importGenSetDB(file: File, graph: TitanGraph): Unit = {

@@ -46,4 +46,10 @@ object Download {
 
   }
 
+
+  def downloadIntPath(file: File): Unit = {
+    val url = new URL("http://compbio.ddns.comp.nus.edu.sg:8080/IntPath/dataset/database/sapiens.zip")
+    download("IntPath sapiens.zip", url, file, false)
+  }
+
 }
