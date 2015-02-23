@@ -2,7 +2,7 @@
 
 ### Installation
 
-Java VM should installed.
+Java VM should be installed.
 
 * Extract content of [OLOPath.db.zip](https://github.com/INTERCROSSING/OLOPath.db/blob/master/OLOPath.db.zip?raw=true).
 * Add `OLOPath.db` directory to systems path. This step can be ommited the tool still be accessable by changing working directory to `OLOPath.db`: `cd OLOPath.db`.
