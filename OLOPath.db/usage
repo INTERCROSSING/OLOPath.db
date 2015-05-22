@@ -25,3 +25,6 @@ download and import BioSystems.
 
 olo database status
 print status of the database.
+
+olo import <name> <file>
+import gene sets from the file in BioSystems format in the database.

@@ -16,6 +16,7 @@ object GeneSetDatabase {
     case "GeneSetDB" => GeneSetDB
     case "BioSystems" => BioSystems
     case "IntPath" => IntPath
+    case databaseName => CustomDatabase(databaseName)
   }
 
 }
@@ -48,6 +49,9 @@ sealed trait GeneSetDatabase {
         }
       } else {
         filtered += 1
+      //  println(geneSetName + ": " + genes.length)
+
+       // println("filtered: " + geneSetName)
       }
     }
 
@@ -67,6 +71,8 @@ case object IntPath extends GeneSetDatabase {
 case object BioSystems extends GeneSetDatabase {
   def name = "BioSystems"
 }
+
+case class CustomDatabase(name: String) extends GeneSetDatabase
 
 object TitanGeneSet {
   val geneSetLabel = "GENE_SET_LABEL"
@@ -181,7 +187,7 @@ class TitanGeneSet(graph: TitanGraph, val vertex: TitanVertex) {
         res += 1
       }
       if (res == 0) {
-        // println(geneID + " not found")
+          // println(geneID + " not found")
       }
     } else {
       // println(geneID + "already added")

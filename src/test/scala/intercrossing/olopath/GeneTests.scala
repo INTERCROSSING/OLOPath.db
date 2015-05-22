@@ -13,7 +13,7 @@ class GeneTests {
 
   @Test
   def testHLA(): Unit = {
-    if(!database.isUniprotImported) {
+    if(!database.isModuleImported(UniprotKBModule)) {
       println("error: uniprot must be imported for this test")
 
     } else {
@@ -28,7 +28,7 @@ class GeneTests {
 
   @Test
   def geneIDTest(): Unit = {
-    if(!database.isUniprotImported) {
+    if(!database.isModuleImported(UniprotKBModule)) {
       println("error: uniprot must be imported for this test")
     } else {
       val id: Long = 204219
@@ -41,9 +41,12 @@ class GeneTests {
     }
   }
 
+
+
+
   @Test
   def geneSetDBSortedTest(): Unit = {
-    if (!database.isGeneSetDBImported) {
+    if(!database.isModuleImported(GeneSetDatabaseModule(GeneSetDB))) {
       println("error: GeneSetDB must be imported for this test")
     } else {
 
@@ -57,7 +60,7 @@ class GeneTests {
 
   @Test
   def bioSystemsSortedTest(): Unit = {
-    if (!database.isBioSystemsImported) {
+    if(!database.isModuleImported(GeneSetDatabaseModule(BioSystems))) {
       println("error: BioSystems must be imported for this test")
     } else {
 
@@ -69,10 +72,26 @@ class GeneTests {
     }
   }
 
+  @Test
+  def bioSystemsSortedTest2(): Unit = {
+    if(!database.isModuleImported(GeneSetDatabaseModule(BioSystems))) {
+      println("error: BioSystems must be imported for this test")
+    } else {
+
+
+      assertEquals(List[TitanGene](), TitanGeneSet.getGeneSet(graph, "920961", BioSystems).get.getGenes())
+      //val res = BioSystems.getGeneSets(graph, 0)
+
+
+    }
+  }
+
+
+
 
   @Test
   def geneSetDBTest(): Unit = {
-    if(!database.isGeneSetDBImported) {
+    if(!database.isModuleImported(GeneSetDatabaseModule(GeneSetDB))) {
       println("error: GeneSetDB must be imported for this test")
     } else {
       TitanGeneSet.getGeneSet(graph, "MPO_absent_tail", GeneSetDB) match {
@@ -89,7 +108,7 @@ class GeneTests {
 
   @Test
   def intPathTest(): Unit = {
-    if(!database.isIntPathImported) {
+    if(!database.isModuleImported(GeneSetDatabaseModule(IntPath))) {
       println("error: IntPath must be imported for this test")
     } else {
       TitanGeneSet.getGeneSet(graph, "Glycolysis and Gluconeogenesis", IntPath) match {
@@ -106,7 +125,7 @@ class GeneTests {
 
   @Test
   def hg38Position(): Unit = {
-    if(!database.isHG38Imported) {
+    if(!database.isModuleImported(HG38Module)) {
       println("error: hg38 must be imported for this test")
     } else {
       val hg38o = TitanReference(graph, "hg38")

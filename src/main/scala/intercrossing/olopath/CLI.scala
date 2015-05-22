@@ -60,6 +60,9 @@ object CLI {
       |olo import BioSystems
       |download and import BioSystems.
       |
+      |olo import <name> <file>
+      |import gene sets from the file in BioSystems format in the database.
+      |
       |olo database status
       |print status of database.
     """.stripMargin
@@ -82,9 +85,16 @@ object CLI {
     //println(args.toList)
     args.toList match {
       case Nil => println("command not specified")
+
       case "import" :: "all" :: Nil => {
         val database = Database.create(delete = true, getWorkingDirectory)
         database.downloadAndImportAll(getWorkingDirectory)
+        database.shutdown()
+      }
+
+
+      case "database" :: "reset" :: Nil => {
+        val database = Database.create(delete = true, getWorkingDirectory)
         database.shutdown()
       }
 
@@ -119,28 +129,21 @@ object CLI {
         database.shutdown()
       }
 
+      case "import" :: name :: file :: Nil => {
+        val databaseFile = new File(file)
+        val database = Database.create(delete = false, getWorkingDirectory)
+        database.importCustom(name, databaseFile)
+        database.shutdown()
+      }
+
       case "database" :: "status" :: Nil => {
         val database = Database.create(delete = false, getWorkingDirectory)
 
         println("imported modules:")
-        if (database.isUniprotImported) {
-          println("UniprotKB")
+        database.listImportedModules().foreach { moduleName =>
+          println(moduleName)
         }
-        if (database.isHG19Imported) {
-          println("hg19 positions")
-        }
-        if (database.isHG38Imported) {
-          println("hg38 positions")
-        }
-        if (database.isGeneSetDBImported) {
-          println("GeneSetDB")
-        }
-        if (database.isBioSystemsImported) {
-          println("BioSystems")
-        }
-        if (database.isIntPathImported) {
-          println("IntPath")
-        }
+        database.graph.commit()
         database.shutdown()
       }
 

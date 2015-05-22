@@ -11,10 +11,35 @@ Java VM should be installed.
 
 ### Usage
 
+#### Gene sets import
+
 ```
 olo import all
 ```
 Download and import to database all data sources UniprotKB, GeneSetDB and BioSystems.
+
+```
+olo import <name> <file>
+```
+Import gene sets from the file in BioSystems format in the database.
+
+```
+olo import UniprotKB
+```
+Download and import UniprotKB.
+
+```
+olo import GeneSetDB
+```
+Download and import GeneSetDB.
+
+```
+olo import BioSystems.
+```
+Download and import BioSystems
+
+
+#### Cluster and compare
 
 ```
 olo cluster <database1,database2,...> -d0 <distance> -min <minSize> [-max <maxSize>] -o <file>
@@ -36,20 +61,7 @@ and to commonFile otherwise. E.g.:
 olo compare GeneSetDB,BioSystems -d0 0.15 -min 10 -max 1000 -unique unique.txt -common common.txt
 ```
 
-```
-olo import UniprotKB
-```
-Download and import UniprotKB.
-
-```
-olo import GeneSetDB
-```
-Download and import GeneSetDB.
-
-```
-olo import BioSystems.
-```
-Download and import BioSystems.
+#### Aditional commands
 
 ```
 olo database status.

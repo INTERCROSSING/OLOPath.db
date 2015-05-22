@@ -2,7 +2,9 @@ package intercrossing.olopath.titan
 
 import java.io.File
 import com.thinkaurelius.titan.core._
+import com.thinkaurelius.titan.graphdb.query.TitanPredicate
 import com.tinkerpop.blueprints.{Direction, Vertex}
+import intercrossing.olopath._
 
 
 object Database {
@@ -28,7 +30,13 @@ object Database {
     if (delete) {
       val importedLabel = mgmt.makeVertexLabel("imported").make()
       val moduleName = mgmt.makePropertyKey("module").dataType(classOf[String]).cardinality(Cardinality.SINGLE).make()
+
       mgmt.buildIndex("importedByModuleName", classOf[Vertex]).addKey(moduleName).indexOnly(importedLabel).buildCompositeIndex()
+
+      val fakeName = mgmt.makePropertyKey("fake").dataType(classOf[String]).cardinality(Cardinality.SINGLE).make()
+      mgmt.buildIndex("importedByFake", classOf[Vertex]).addKey(fakeName).indexOnly(importedLabel).buildCompositeIndex()
+
+      // mgmt.buildIndex("listModules", classOf[Vertex]).indexOnly(importedLabel).()
 
       val referenceLabel = mgmt.makeVertexLabel(TitanReference.referenceLabel).make()
       val referenceName = mgmt.makePropertyKey(TitanReference.nameProperty).dataType(classOf[String]).cardinality(Cardinality.SINGLE).make()
@@ -100,113 +108,102 @@ class Database(val graph: TitanGraph) {
   }
 
   def importUniprot(file: File): Unit = {
-    if (!isUniprotImported) {
+    if (!isModuleImported(UniprotKBModule)) {
       Import.importUniprot(file, graph)
-      val uniprotVertex = graph.addVertexWithLabel("imported")
-      uniprotVertex.setProperty("module", "uniprot")
-      graph.commit()
+      setAsImported(UniprotKBModule)
     } else {
       println("uniprot is already imported")
     }
   }
 
   def importHG19(file: File): Unit = {
-    if (!isUniprotImported) {
+    if (!isModuleImported(UniprotKBModule)) {
       println("error: UniprotKB should be imported first")
-    } else if (!isHG19Imported) {
+    } else if (!isModuleImported(HG19Module)) {
       val hg19 = TitanReference.getOrCreateReference(graph, "hg19")
       Import.ncbiPositionsImport(file, "GRCh37\\.p13", graph, hg19)
-      val uniprotVertex = graph.addVertexWithLabel("imported")
-      uniprotVertex.setProperty("module", "hg19")
-      graph.commit()
+      setAsImported(HG19Module)
     } else {
       println("hg19 positions are already imported")
     }
   }
 
   def importHG38(file: File): Unit = {
-    if (!isUniprotImported) {
+    if (!isModuleImported(UniprotKBModule)) {
       println("error: UniprotKB should be imported first")
-    } else if (!isHG38Imported) {
+    } else if (!isModuleImported(HG38Module)) {
       val hg38 = TitanReference.getOrCreateReference(graph, "hg38")
       Import.ncbiPositionsImport(file, "GRCh38", graph, hg38)
-      val uniprotVertex = graph.addVertexWithLabel("imported")
-      uniprotVertex.setProperty("module", "hg38")
-      graph.commit()
+      setAsImported(HG38Module)
     } else {
       println("hg38 positions are already imported")
     }
   }
 
-  def isUniprotImported: Boolean = {
-    val it = graph.query().has("label", "imported").has("module", "uniprot").vertices().iterator()
+  def isModuleImported(module: Module): Boolean = {
+    val it = graph.query().has("label", "imported").has("module", module.name).vertices().iterator()
     it.hasNext
   }
 
-  def isIntPathImported: Boolean = {
-    val it = graph.query().has("label", "imported").has("module", "IntPath").vertices().iterator()
-    it.hasNext
+  def setAsImported(module: Module): Unit = {
+    val importVertex = graph.addVertexWithLabel("imported")
+    importVertex.setProperty("module", module.name)
+    importVertex.setProperty("fake", "fake")
+    graph.commit()
   }
 
-  def isHG19Imported: Boolean = {
-    val it = graph.query().has("label", "imported").has("module", "hg19").vertices().iterator()
-    it.hasNext
-  }
-
-  def isHG38Imported: Boolean = {
-    val it = graph.query().has("label", "imported").has("module", "hg38").vertices().iterator()
-    it.hasNext
-  }
-
-  def isGeneSetDBImported: Boolean = {
-    val it = graph.query().has("label", "imported").has("module", "GeneSetDB").vertices().iterator()
-    it.hasNext
-  }
-
-  def isBioSystemsImported: Boolean = {
-    val it = graph.query().has("label", "imported").has("module", "BioSystems").vertices().iterator()
-    it.hasNext
+  def listImportedModules(): List[String] = {
+    import scala.collection.JavaConversions._
+    graph.query().has("label", "imported").has("fake", "fake").vertices().iterator().toList.map { v => v.getProperty("module").toString }
   }
 
   def importGeneSetDB(file: File) = {
-    if (!isUniprotImported) {
+    if (!isModuleImported(UniprotKBModule)) {
       println("error: UniprotKB should be imported first")
-    } else if (isGeneSetDBImported) {
+    } else if (isModuleImported(GeneSetDatabaseModule(GeneSetDB))) {
       println("warning: GeneSetDB has already been imported")
     } else {
       Import.importGenSetDB(file, graph)
-      val importVertex = graph.addVertexWithLabel("imported")
-      importVertex.setProperty("module", "GeneSetDB")
-      graph.commit()
+      setAsImported(GeneSetDatabaseModule(GeneSetDB))
     }
   }
 
   def importIntPath(file: File) = {
-    if (!isUniprotImported) {
+    if (!isModuleImported(UniprotKBModule)) {
       println("error: UniprotKB should be imported first")
-    } else if (isIntPathImported) {
+    } else if (isModuleImported(GeneSetDatabaseModule(IntPath))) {
       println("warning: IntPath has already been imported")
     } else {
       Import.importIntPath(file, graph)
-      val importVertex = graph.addVertexWithLabel("imported")
-      importVertex.setProperty("module", "IntPath")
-      graph.commit()
+      setAsImported(GeneSetDatabaseModule(IntPath))
+
     }
   }
 
   def importBioSystems(taxonomyFile: File, geneFile: File) = {
-    if (!isUniprotImported) {
+    if (!isModuleImported(UniprotKBModule)) {
       println("error: UniprotKB should be imported first")
-    } else if (isBioSystemsImported) {
+    } else if (isModuleImported(GeneSetDatabaseModule(BioSystems))) {
       println("warning: BioSystems has already been imported")
     } else {
       BioSystemsImport.importBioSystemsTaxonomy(graph, taxonomyFile)
       graph.commit()
       BioSystemsImport.genesImport(graph, geneFile)
 
-      val importVertex = graph.addVertexWithLabel("imported")
-      importVertex.setProperty("module", "BioSystems")
-      graph.commit()
+      setAsImported(GeneSetDatabaseModule(BioSystems))
+
+    }
+  }
+
+  def importCustom(name: String, file: File) = {
+    val module = GeneSetDatabaseModule(CustomDatabase(name))
+    if (!isModuleImported(UniprotKBModule)) {
+      println("error: UniprotKB should be imported first")
+    } else if (isModuleImported(module)) {
+      println("warning: " + module.name + " has already been imported")
+    } else {
+      BioSystemsImport.bioSystemsLikeGenesImport(CustomDatabase(name), graph, file)
+      setAsImported(GeneSetDatabaseModule(CustomDatabase(name)))
     }
   }
 

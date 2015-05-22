@@ -80,6 +80,10 @@ object GeneSetClustering {
           result.put(name, set)
         }
         case Some((name2, set2)) => {
+
+          //println(name + "=" + name2)
+          //println("set1: " + set)
+          //println("set2: " + set2)
           result.remove(name2)
           val union = SetUtils.union(set2, set)
           val chunk = maxSize match {

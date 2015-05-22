@@ -23,5 +23,8 @@ download and import GeneSetDB.
 olo import BioSystems
 download and import BioSystems.
 
+olo import <name> <file>
+import gene sets from the file in BioSystems format in the database.
+
 olo database status
 print status of the database.
