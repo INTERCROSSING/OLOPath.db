@@ -42,6 +42,23 @@ class GeneTests {
   }
 
 
+  @Test
+  def uniprotACTest(): Unit = {
+    if(!database.isModuleImported(UniprotKBModule)) {
+      println("error: uniprot must be imported for this test")
+    } else {
+      val id: Long = 79989
+      val gene = TitanGene.byGeneID(graph, id)
+
+      //AC   A0AVF1; A4D1S3; B7Z5M0; C9J2N7; F8W724; Q9H9S8; Q9NTC0;
+      //println(gene.map(_.uniprotACs))
+
+      assertEquals(true, gene.exists(_.uniprotACs.contains("A0AVF1")))
+      assertEquals(true, gene.exists(_.uniprotACs.contains("Q9NTC0")))
+
+    }
+  }
+
 
 
   @Test

@@ -79,8 +79,11 @@ object Database {
       mgmt.buildIndex("geneBy" + TitanGene.geneIDProperty, classOf[Vertex]).addKey(geneIdProp).indexOnly(geneLabel).buildCompositeIndex()
 
 
-      val geneUniprotIdProp = mgmt.makePropertyKey(TitanGene.uniprotID).dataType(classOf[String]).cardinality(Cardinality.SINGLE).make()
-      mgmt.buildIndex("geneBy" + TitanGene.uniprotID, classOf[Vertex]).addKey(geneUniprotIdProp).indexOnly(geneLabel).buildCompositeIndex()
+      val geneUniprotACProp = mgmt.makePropertyKey(TitanGene.geneUniprotACProperty).dataType(classOf[String]).cardinality(Cardinality.LIST).make()
+      mgmt.buildIndex("geneBy" + TitanGene.geneUniprotACProperty, classOf[Vertex]).addKey(geneUniprotACProp).indexOnly(geneLabel).buildCompositeIndex()
+
+      val geneUniprotIdProp = mgmt.makePropertyKey(TitanGene.geneUniprotIDProperty).dataType(classOf[String]).cardinality(Cardinality.SINGLE).make()
+      mgmt.buildIndex("geneBy" + TitanGene.geneUniprotIDProperty, classOf[Vertex]).addKey(geneUniprotIdProp).indexOnly(geneLabel).buildCompositeIndex()
 
       val geneMIMProp = mgmt.makePropertyKey(TitanGene.geneMIMProperty).dataType(classOf[String]).cardinality(Cardinality.SINGLE).make()
       mgmt.buildIndex("geneBy" + TitanGene.geneMIMProperty, classOf[Vertex]).addKey(geneMIMProp).indexOnly(geneLabel).buildCompositeIndex()

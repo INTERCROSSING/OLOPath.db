@@ -84,7 +84,6 @@ object CLI {
   def main(args: Array[String]): Unit = {
     //println(args.toList)
     args.toList match {
-      case Nil => println("command not specified")
 
       case "import" :: "all" :: Nil => {
         val database = Database.create(delete = true, getWorkingDirectory)
@@ -101,6 +100,7 @@ object CLI {
       case "import" :: "UniprotKB" :: Nil => {
         val uniprotFile = new File(getWorkingDirectory, "uniprot_sprot_human.dat.gz")
         val database = Database.create(delete = false, getWorkingDirectory)
+        Download.downloadUniprot(uniprotFile)
         database.importUniprot(uniprotFile)
         database.shutdown()
       }
@@ -108,6 +108,7 @@ object CLI {
       case "import" :: "IntPath" :: Nil => {
         val intPath = new File("sapiens.zip")
         val database = Database.create(delete = false, getWorkingDirectory)
+        Download.downloadIntPath(intPath)
         database.importIntPath(intPath)
         database.shutdown()
       }
@@ -115,6 +116,7 @@ object CLI {
       case "import" :: "GeneSetDB" :: Nil => {
         val file = new File(getWorkingDirectory, "download-gmt_h.txt")
         val database = Database.create(delete = false, getWorkingDirectory)
+        Download.downloadGeneSetDB(file)
         database.importGeneSetDB(file)
         database.shutdown()
       }
@@ -124,6 +126,7 @@ object CLI {
         val database = Database.create(delete = false, getWorkingDirectory)
 
         val genesFile = new File("biosystems_gene.gz")
+        Download.downloadBioSystems(taxonomyFile, genesFile)
         database.importBioSystems(taxonomyFile, genesFile)
 
         database.shutdown()

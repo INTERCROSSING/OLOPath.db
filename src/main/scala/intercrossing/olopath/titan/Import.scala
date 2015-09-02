@@ -53,7 +53,7 @@ object Import {
   }
 
 
-  def addGene(graph: TitanGraph, uniprotId: String, geneIDs: List[String], geneSymbol: String, mimId: String): Unit = {
+  def addGene(graph: TitanGraph, uniprotId: String, geneIDs: List[String], geneSymbol: String, mimId: String, acs: List[String]): Unit = {
 
     if (uniprotId.isEmpty) {
       // println("error: uniprotId is empty GeneID:" + geneID + " Symbol:" + geneSymbol)
@@ -70,21 +70,27 @@ object Import {
       }
     }
 
-    graph.query().has("label", TitanGene.geneLabel).has(TitanGene.uniprotID, uniprotId).vertices().iterator().toList match {
+    graph.query().has("label", TitanGene.geneLabel).has(TitanGene.geneUniprotIDProperty, uniprotId).vertices().iterator().toList match {
 
       case Nil => {
         //should create new gene
         val vertex = graph.addVertexWithLabel(TitanGene.geneLabel)
-        vertex.setProperty(TitanGene.uniprotID, uniprotId)
+        vertex.setProperty(TitanGene.geneUniprotIDProperty, uniprotId)
         vertex.setProperty(TitanGene.geneSymbolProperty, geneSymbol)
 
         geneIdsLong.foreach { geneId =>
           vertex.addProperty(TitanGene.geneIDProperty, geneId)
         }
 
+        acs.foreach { ac =>
+          vertex.addProperty(TitanGene.geneUniprotACProperty, ac)
+        }
+
         if (!mimId.isEmpty) {
           vertex.addProperty(TitanGene.geneMIMProperty, mimId)
         }
+
+
 
       }
       case oneVertex :: Nil => {
@@ -120,6 +126,12 @@ object Import {
     //GN   Name=HLA-A; Synonyms=HLAA;
     val geneSymbolRegexp = """GN\s+Name=([^;\s]+).+""".r
 
+    var acs = new mutable.ArrayBuffer[String]()
+
+    //AC   Q92892; Q92893;
+    val acRegexp = """AC\s+(.+)""".r
+
+
     var first = true
     source.getLines().foreach {
       case idRegexp(rid) => {
@@ -129,11 +141,12 @@ object Import {
         if (first) {
           first = false
         } else {
-          addGene(graph, uniprotId, geneIDs.toList, geneSymbol, mimId = mim)
+          addGene(graph, uniprotId, geneIDs.toList, geneSymbol, mimId = mim, acs.toList)
           geneSymbol = ""
           //uniprotName = ""
           mim = ""
           geneIDs.clear()
+          acs.clear()
         }
         uniprotId = rid
         counter += 1
@@ -149,9 +162,15 @@ object Import {
       case geneIdRegexp(id) => {
         geneIDs += id
       }
+
+      case acRegexp(acsRaw) => {
+        acsRaw.split(";\\s*").filterNot(_.isEmpty).foreach { ac =>
+          acs += ac
+        }
+      }
       case _ => ()
     }
-    addGene(graph, uniprotId, geneIDs.toList, geneSymbol, mimId = mim)
+    addGene(graph, uniprotId, geneIDs.toList, geneSymbol, mimId = mim, acs.toList)
     graph.commit()
   }
 

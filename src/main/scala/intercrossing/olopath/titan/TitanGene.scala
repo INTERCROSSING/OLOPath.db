@@ -8,9 +8,10 @@ import scala.collection.JavaConversions._
 
 object TitanGene {
   val geneLabel = "GENE"
-  val uniprotID = "GENE_UNIPROT"
+  val geneUniprotIDProperty = "GENE_UNIPROT_ID"
   val geneSymbolProperty = "GENE_SYMBOL"
-  val geneIDProperty = "GENEID"
+  val geneIDProperty = "GENE_ID"
+  val geneUniprotACProperty = "GENE_UNIPROT_AC"
   val geneMIMProperty = "GENE_MIM"
 
 
@@ -58,8 +59,13 @@ class TitanGene(graph: TitanGraph, val vertex: Vertex) extends Gene {
     raw.toList
   }
 
+  def uniprotACs: List[String] = {
+    val raw: java.util.ArrayList[String] = vertex.getProperty(TitanGene.geneUniprotACProperty)
+    raw.toList
+  }
+
   def uniprotId: String = {
-    vertex.getProperty(TitanGene.uniprotID)
+    vertex.getProperty(TitanGene.geneUniprotIDProperty)
   }
 
   override def toString: String = {
