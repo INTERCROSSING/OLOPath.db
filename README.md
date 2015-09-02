@@ -36,7 +36,22 @@ Download and import GeneSetDB.
 ```
 olo import BioSystems.
 ```
-Download and import BioSystems
+Download and import BioSystems.
+
+```
+olo import Reactome.
+```
+Download and import Reactome.
+
+```
+olo import ReactomeAll.
+```
+Download and import Reactome (all levels of the pathway hierarchy).
+
+```
+olo import PID.
+```
+Download and import PID.
 
 
 #### Cluster and compare

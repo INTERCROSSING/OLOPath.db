@@ -16,6 +16,9 @@ object GeneSetDatabase {
     case "GeneSetDB" => GeneSetDB
     case "BioSystems" => BioSystems
     case "IntPath" => IntPath
+    case "Reactome" => Reactome
+    case "ReactomeAll" => ReactomeAll
+    case "PID" => PID
     case databaseName => CustomDatabase(databaseName)
   }
 
@@ -70,6 +73,18 @@ case object IntPath extends GeneSetDatabase {
 
 case object BioSystems extends GeneSetDatabase {
   def name = "BioSystems"
+}
+
+case object Reactome extends GeneSetDatabase {
+  def name = "Reactome"
+}
+
+case object ReactomeAll extends GeneSetDatabase {
+  def name = "ReactomeAll"
+}
+
+case object PID extends GeneSetDatabase {
+  def name = "PID"
 }
 
 case class CustomDatabase(name: String) extends GeneSetDatabase
@@ -127,6 +142,12 @@ object TitanGeneSet {
     getGeneSet(graph, name, database) match {
       case None => createGeneSet(graph, name, database, source)
       case Some(set) => set
+    }
+
+  def getOrCreateGeneSetC(graph: TitanGraph, name: String, database: GeneSetDatabase, source: String): (TitanGeneSet, Int) =
+    getGeneSet(graph, name, database) match {
+      case None => (createGeneSet(graph, name, database, source), 1)
+      case Some(set) => (set, 0)
     }
 }
 
@@ -194,6 +215,10 @@ class TitanGeneSet(graph: TitanGraph, val vertex: TitanVertex) {
     }
     res
   }
+
+//  def addGene(uniprotAC: String) = {
+//
+//  }
 
   def addGenes(geneIDs: Traversable[Long]): Unit = {
     val addedGeneIds = geneSet()

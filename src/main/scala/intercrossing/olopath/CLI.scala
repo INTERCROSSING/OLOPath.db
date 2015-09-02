@@ -60,6 +60,15 @@ object CLI {
       |olo import BioSystems
       |download and import BioSystems.
       |
+      |olo import Reactome
+      |download and import Reatome.
+      |
+      |olo import ReactomeAll
+      |download and import ReactomeALL (all levels of the pathway hierarchy).
+      |
+      |olo import PID
+      |download and import BioSystems.
+      |
       |olo import <name> <file>
       |import gene sets from the file in BioSystems format in the database.
       |
@@ -110,6 +119,31 @@ object CLI {
         val database = Database.create(delete = false, getWorkingDirectory)
         Download.downloadIntPath(intPath)
         database.importIntPath(intPath)
+        database.shutdown()
+      }
+
+      case "import" :: "Reactome" :: Nil => {
+        val file = new File("UniProt2Reactome.txt")
+        val database = Database.create(delete = false, getWorkingDirectory)
+        Download.downloadReactome(file)
+        database.importReactome(file)
+        database.shutdown()
+      }
+
+      case "import" :: "ReactomeAll" :: Nil => {
+        val file = new File("UniProt2ReactomeAll.txt")
+        val database = Database.create(delete = false, getWorkingDirectory)
+        Download.downloadReactomeAll(file)
+        database.importReactomeAll(file)
+        database.shutdown()
+      }
+
+      case "import" :: "PID" :: Nil => {
+        //ftp://ftp1.nci.nih.gov/pub/PID/uniprot/uniprot.tab.gz
+        val file = new File("pid.uniprot.tab.gz")
+        val database = Database.create(delete = false, getWorkingDirectory)
+        Download.downloadPID(file)
+        database.importPID(file)
         database.shutdown()
       }
 

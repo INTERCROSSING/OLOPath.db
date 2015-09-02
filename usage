@@ -23,6 +23,15 @@ download and import GeneSetDB.
 olo import BioSystems
 download and import BioSystems.
 
+olo import Reactome
+download and import Reatome.
+
+olo import ReactomeAll
+download and import Reactome (all levels of the pathway hierarchy).
+
+olo import PID
+download and import PID.
+
 olo import <name> <file>
 import gene sets from the file in BioSystems format in the database.
 

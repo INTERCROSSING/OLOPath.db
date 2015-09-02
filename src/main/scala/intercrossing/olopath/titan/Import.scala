@@ -256,4 +256,117 @@ object Import {
     graph.commit()
     println(counter + " gene sets added")
   }
+
+
+  def importReactome(file: File, graph: TitanGraph, all: Boolean): Unit = {
+    println("importing Rectome from " + file.getName)
+
+    val geneSetDB = if (all) ReactomeAll else Reactome
+    var counter = 0L
+    var unknownACs = 0L
+    var genesWithoutId = 0L
+    var geneSetCounter = 0L
+
+    io.Source.fromFile(file).getLines().foreach { line =>
+      if (counter % 1000 == 0) {
+        println(counter + " genes processed")
+        if (counter % 1000 == 0) {
+          graph.commit()
+        }
+      }
+      counter += 1
+      val parts = line.trim.split("\\s+")
+      if (parts.size < 2) {
+        println("parse error: " + line)
+      } else {
+        val ac = parts(0)
+        val pathway = parts(1)
+
+        if (pathway.startsWith("R-HSA")) {
+          TitanGene.byUniprotAC(graph, ac) match {
+            case None => unknownACs += 1
+            case Some(gene) => {
+              gene.geneIDs.headOption match {
+                case None => genesWithoutId += 1
+                case Some(geneId) => {
+
+                  val (geneSet, geneSetAdded) = TitanGeneSet.getOrCreateGeneSetC(graph, pathway, geneSetDB, "")
+                  geneSetCounter += geneSetAdded
+                  geneSet.addGene(geneId)
+                }
+              }
+            }
+          }
+        } else {
+          if (line.contains("Homo sapiens")) {
+            //println("warning: pathway " + pathway + " skipped")
+          }
+        }
+      }
+    }
+    graph.commit()
+
+    println(counter + " genes processed")
+    println(geneSetCounter + " gene sets added")
+    if (unknownACs > 0) {
+      //println("warning: " + unknownACs + " genes with unknown Uniprot AC skipped")
+    }
+    if (genesWithoutId > 0) {
+      //println("warning: " + genesWithoutId + " genes with unknown GeneID skipped")
+    }
+  }
+
+  def importPID(file: File, graph: TitanGraph): Unit = {
+    println("importing PID from " + file.getName)
+
+    var counter = 0L
+    var unknownACs = 0L
+    var genesWithoutId = 0L
+    var geneSetCounter = 0L
+
+    val source = io.Source.fromInputStream(new GZIPInputStream(new FileInputStream(file)))
+    source.getLines().foreach { line =>
+      if (counter % 1000 == 0) {
+        println(counter + " genes processed")
+        if (counter % 1000 == 0) {
+          graph.commit()
+        }
+      }
+      counter += 1
+      val parts = line.trim.split("\\s+")
+      if (parts.size < 2) {
+        println("parse error: " + line)
+      } else {
+        val ac = parts(0)
+        val pathway = parts.last
+
+        TitanGene.byUniprotAC(graph, ac) match {
+          case None => unknownACs += 1
+          case Some(gene) => {
+            gene.geneIDs.headOption match {
+              case None => genesWithoutId += 1
+              case Some(geneId) => {
+
+                val (geneSet, geneSetAdded) = TitanGeneSet.getOrCreateGeneSetC(graph, pathway, PID, "")
+                geneSetCounter += geneSetAdded
+                geneSet.addGene(geneId)
+              }
+            }
+          }
+
+        }
+      }
+    }
+    graph.commit()
+
+    println(counter + " genes processed")
+    println(geneSetCounter + " gene sets added")
+    if (unknownACs > 0) {
+      //println("warning: " + unknownACs + " genes with unknown Uniprot AC skipped")
+    }
+    if (genesWithoutId > 0) {
+      //println("warning: " + genesWithoutId + " genes with unknown GeneID skipped")
+    }
+  }
+
 }

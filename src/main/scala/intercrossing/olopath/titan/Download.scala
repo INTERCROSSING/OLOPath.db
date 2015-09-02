@@ -52,4 +52,18 @@ object Download {
     download("IntPath sapiens.zip", url, file, false)
   }
 
+  def downloadReactomeAll(file: File): Unit = {
+    val url = new URL("http://www.reactome.org/download/current/UniProt2Reactome_All_Levels.txt")
+    download("ReactomeAll", url, file, false)
+  }
+
+  def downloadReactome(file: File): Unit = {
+    val url = new URL("http://www.reactome.org/download/current/UniProt2Reactome.txt")
+    download("Reactome", url, file, false)
+  }
+
+  def downloadPID(file: File): Unit = {
+    val url = new URL("ftp://ftp1.nci.nih.gov/pub/PID/uniprot/uniprot.tab.gz")
+    download("PID", url, file, false)
+  }
 }

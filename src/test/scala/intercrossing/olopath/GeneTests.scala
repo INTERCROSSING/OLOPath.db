@@ -75,6 +75,8 @@ class GeneTests {
     }
   }
 
+
+
   @Test
   def bioSystemsSortedTest(): Unit = {
     if(!database.isModuleImported(GeneSetDatabaseModule(BioSystems))) {
@@ -135,6 +137,40 @@ class GeneTests {
           assertEquals(74, genes.size) //91?
         //  println(genes)
           assertEquals(true, genes.exists(_.geneIDs.contains(5211)))
+        }
+      }
+    }
+  }
+
+  @Test
+  def reactomeTest(): Unit = {
+    if(!database.isModuleImported(GeneSetDatabaseModule(Reactome))) {
+      println("error: Reactome must be imported for this test")
+    } else {
+      val geneSetName = "R-HSA-446343"
+      TitanGeneSet.getGeneSet(graph, geneSetName, Reactome) match {
+        case None => fail("couldn't find gene set " + geneSetName)
+        case Some(set) => {
+          val genes = set.getGenes()
+          assertEquals(4, genes.size) //91?
+          assertEquals(true, genes.exists(_.geneIDs.contains(55742)))
+        }
+      }
+    }
+  }
+
+  @Test
+  def pidTest(): Unit = {
+    if(!database.isModuleImported(GeneSetDatabaseModule(PID))) {
+      println("error: PID must be imported for this test")
+    } else {
+      val geneSetName = "200043"
+      TitanGeneSet.getGeneSet(graph, geneSetName, PID) match {
+        case None => fail("couldn't find gene set " + geneSetName)
+        case Some(set) => {
+          val genes = set.getGenes()
+          assertEquals(43, genes.size)
+          assertEquals(true, genes.exists(_.geneIDs.contains(7045)))
         }
       }
     }

@@ -179,7 +179,39 @@ class Database(val graph: TitanGraph) {
     } else {
       Import.importIntPath(file, graph)
       setAsImported(GeneSetDatabaseModule(IntPath))
+    }
+  }
 
+  def importReactome(file: File) = {
+    if (!isModuleImported(UniprotKBModule)) {
+      println("error: UniprotKB should be imported first")
+    } else if (isModuleImported(GeneSetDatabaseModule(Reactome))) {
+      println("warning: Reactome has already been imported")
+    } else {
+      Import.importReactome(file, graph, all = false)
+      setAsImported(GeneSetDatabaseModule(Reactome))
+    }
+  }
+
+  def importReactomeAll(file: File) = {
+    if (!isModuleImported(UniprotKBModule)) {
+      println("error: UniprotKB should be imported first")
+    } else if (isModuleImported(GeneSetDatabaseModule(ReactomeAll))) {
+      println("warning: ReactomeAll has already been imported")
+    } else {
+      Import.importReactome(file, graph, all = true)
+      setAsImported(GeneSetDatabaseModule(ReactomeAll))
+    }
+  }
+
+  def importPID(file: File) = {
+    if (!isModuleImported(UniprotKBModule)) {
+      println("error: UniprotKB should be imported first")
+    } else if (isModuleImported(GeneSetDatabaseModule(PID))) {
+      println("warning: PID has already been imported")
+    } else {
+      Import.importPID(file, graph)
+      setAsImported(GeneSetDatabaseModule(PID))
     }
   }
 
@@ -228,6 +260,19 @@ class Database(val graph: TitanGraph) {
     val intPath = new File("sapiens.zip")
     Download.downloadIntPath(intPath)
     Import.importIntPath(intPath, graph)
+
+    val reactome = new File("UniProt2Reactome.txt")
+    Download.downloadReactome(reactome)
+    Import.importReactome(reactome, graph, all = false)
+
+    val reactomeAll = new File("UniProt2ReactomeAll.txt")
+    Download.downloadReactomeAll(reactomeAll)
+    Import.importReactome(reactomeAll, graph, all = true)
+
+    //ftp://ftp1.nci.nih.gov/pub/PID/uniprot/uniprot.tab.gz
+    val pid = new File("pid.uniprot.tab.gz")
+    Download.downloadPID(pid)
+    Import.importPID(pid, graph)
   }
 
 }

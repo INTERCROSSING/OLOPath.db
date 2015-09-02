@@ -42,6 +42,20 @@ object TitanGene {
     }
 
   }
+
+  def byUniprotAC(graph: TitanGraph, ac: String): Option[TitanGene] = {
+    val it = graph.query()
+      .has("label", geneLabel)
+      .has(geneUniprotACProperty, ac)
+      .vertices().iterator()
+
+    if (it.hasNext) {
+      Some(new TitanGene(graph, it.next()))
+    } else {
+      None
+    }
+
+  }
 }
 
 class TitanGene(graph: TitanGraph, val vertex: Vertex) extends Gene {
